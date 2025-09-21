@@ -1,0 +1,5 @@
+exclude_paths:
+  - .cache/
+  - .github/
+skip_list:
+  - yaml[line-length]  # Skip long line warnings if needed
