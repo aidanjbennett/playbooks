@@ -1,0 +1,10 @@
+---
+- name: Write file to local system
+  hosts: all # Runs everything in inv i could set to web to just run on the web group
+  gather_facts: false
+  tasks:
+    - name: Write file test.txt to temp directory
+      ansible.builtin.lineinfile:
+        path: /tmp/test.txt
+        line: just a quick test file
+        create: true
