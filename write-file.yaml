@@ -8,3 +8,4 @@
         path: /tmp/test.txt
         line: just a quick test file
         create: true
+        mode: '0644'
