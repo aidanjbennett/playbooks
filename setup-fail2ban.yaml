@@ -10,17 +10,17 @@
 
   tasks:
     - name: Update apt cache
-      apt:
-        update_cache: yes
+      ansible.builtin.apt:
+        update_cache: true
         cache_valid_time: 3600
 
     - name: Install Fail2Ban
-      apt:
+      ansible.builtin.apt:
         name: fail2ban
         state: present
 
     - name: Create jail.local configuration for SSH protection
-      copy:
+      ansible.builtin.copy:
         content: |
           [sshd]
           enabled = true
@@ -34,32 +34,32 @@
         owner: root
         group: root
         mode: "0644" # Setup file perms
-        backup: yes
+        backup: true
       notify: restart fail2ban
 
     - name: Start and enable Fail2Ban service
-      systemd:
+      ansible.builtin.systemd:
         name: fail2ban
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Check SSH jail status
-      command: fail2ban-client status sshd
+      ansible.builtin.command: fail2ban-client status sshd
       register: ssh_jail_status
       changed_when: false
       failed_when: false
 
     - name: Display SSH jail status
-      debug:
+      ansible.builtin.debug:
         msg: "{{ ssh_jail_status.stdout_lines }}"
       when: ssh_jail_status.rc == 0
 
     - name: Show default Fail2Ban log location
-      debug:
+      ansible.builtin.debug:
         msg: "Fail2Ban logs are available at: /var/log/fail2ban.log"
 
   handlers:
-    - name: restart fail2ban
-      systemd:
+    - name: Restart Fail2Ban
+      ansible.builtin.systemd:
         name: fail2ban
         state: restarted
