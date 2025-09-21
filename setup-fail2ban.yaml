@@ -1,0 +1,65 @@
+---
+- name: Install and Configure Fail2Ban for SSH Protection on Ubuntu
+  hosts: all
+  become: true
+  vars:
+    # SSH jail configuration
+    ssh_bantime: "1h"
+    ssh_findtime: "10m"
+    ssh_maxretry: 3
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Fail2Ban
+      apt:
+        name: fail2ban
+        state: present
+
+    - name: Create jail.local configuration for SSH protection
+      copy:
+        content: |
+          [sshd]
+          enabled = true
+          port = ssh
+          filter = sshd
+          logpath = /var/log/auth.log
+          maxretry = {{ ssh_maxretry }}
+          bantime = {{ ssh_bantime }}
+          findtime = {{ ssh_findtime }}
+        dest: /etc/fail2ban/jail.local
+        owner: root
+        group: root
+        mode: "0644" # Setup file perms
+        backup: yes
+      notify: restart fail2ban
+
+    - name: Start and enable Fail2Ban service
+      systemd:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+    - name: Check SSH jail status
+      command: fail2ban-client status sshd
+      register: ssh_jail_status
+      changed_when: false
+      failed_when: false
+
+    - name: Display SSH jail status
+      debug:
+        msg: "{{ ssh_jail_status.stdout_lines }}"
+      when: ssh_jail_status.rc == 0
+
+    - name: Show default Fail2Ban log location
+      debug:
+        msg: "Fail2Ban logs are available at: /var/log/fail2ban.log"
+
+  handlers:
+    - name: restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
